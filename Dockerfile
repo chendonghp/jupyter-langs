@@ -2,9 +2,11 @@
 
 ARG GOLANG_VERSION=1.19.1
 ARG JULIA_VERSION=1.8.2
-ARG DOTNET_SDK_VERSION=6.0.401
-ARG ELIXIR_VERSION=1.12.3
+# ARG DOTNET_SDK_VERSION=6.0.401
+# ARG ELIXIR_VERSION=1.12.3
 ARG JAVA_VERSION=18.0.2.1
+
+
 
 # https://hub.docker.com/_/golang
 FROM golang:${GOLANG_VERSION}-bullseye as golang
@@ -18,10 +20,11 @@ FROM julia:${JULIA_VERSION}-bullseye as julia
 # https://hub.docker.com/_/openjdk
 FROM openjdk:${JAVA_VERSION}-jdk-bullseye as openjdk
 
-FROM ghcr.io/heromo/jupyter-langs/python:5.17.0
-LABEL maintainer="HeRoMo"
+# FROM ghcr.io/heromo/jupyter-langs/python:5.17.0
+FROM chendonghp/jupyter-py-js-ts:0.1
+LABEL maintainer="chendonghp"
 LABEL Description="Jupyter lab for various languages"
-LABEL Version="5.17.0"
+LABEL Version="0.1"
 
 # Install SPARQL
 # RUN pip install sparqlkernel && \
@@ -55,6 +58,7 @@ RUN mamba install --quiet --yes -c conda-forge \
             'r-markdown' \
             'r-plotly'
 
+
 # Install Julia
 ENV JULIA_PATH /usr/local/julia
 ENV PATH ${JULIA_PATH}/bin:$PATH
@@ -80,7 +84,7 @@ RUN go install github.com/gopherdata/gophernotes@v${GOPHERNOTES_VERSION} \
 ENV RUSTUP_HOME=/usr/local/rustup
 ENV CARGO_HOME=/usr/local/cargo
 ENV PATH=/usr/local/cargo/bin:$PATH
-ENV RUST_VERSION=1.64.0
+ENV RUST_VERSION=1.65.0
 ENV RUSTUP_VERSION=1.25.1
 RUN set -eux; \
     dpkgArch="$(dpkg --print-architecture)"; \
@@ -212,6 +216,14 @@ RUN curl -Lo coursier https://git.io/coursier-cli \
     && chmod +x coursier \
     && ./coursier launch --fork almond -- --install \
     && rm -f coursier
+
+
+
+# Install C++
+# https://github.com/jupyter-xeus/xeus-cling
+# environment not compatible
+# RUN mamba install xeus-cling -c conda-forge
+
 
 # ↓ 削除系ははまとめてここでやる
 RUN mamba clean --all \

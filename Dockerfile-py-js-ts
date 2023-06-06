@@ -1,7 +1,7 @@
 # jupyter-langs:python
 
 # https://hub.docker.com/_/node
-ARG node_version=18.10.0
+ARG node_version=20
 FROM node:${node_version}-bullseye-slim as nodejs 
 
 # https://hub.docker.com/r/continuumio/miniconda3
@@ -25,6 +25,7 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends \
             curl \
             build-essential \
+            libc6 \
             cmake \
             gnupg \
             locales \
@@ -34,48 +35,44 @@ RUN apt-get update \
             libffi-dev \
             libzmq3-dev \
             libczmq-dev \
-    && apt-get clean \
+            # use to build ZeroMQ, https://stackoverflow.com/questions/33380020/errorcould-not-find-pkgconfig-missing-pkg-config-executable
+            pkg-config \
+    && apt-get clean 
     # && rm -rf /var/lib/apt/lists/*
 
-# Set Locale
-ENV LANG=ja_JP.UTF-8
-ENV LC_ALL=ja_JP.UTF-8
-RUN echo "LC_ALL=ja_JP.UTF-8" >> /etc/environment \
-    && echo "ja_JP.UTF-8 UTF-8" >> /etc/locale.gen \
-    && echo "LANG=ja_JP.UTF-8" > /etc/locale.conf \
-    && locale-gen ja_JP.UTF-8
 
-# Upgrade conda
+# Upgrade conda, install mamba
 RUN conda update -n base -c defaults conda
 RUN conda install -c conda-forge mamba -y 
 
-# Install Jupyter
+# Install Jupyter, and common lib
 RUN mamba update -c conda-forge --all
 RUN mamba install -y -c conda-forge  \
-                python=3.10.6 \
+                python=3.10 \
                 pandas \
                 scipy \
-                bokeh \
                 matplotlib \
                 # tensorflow \
                 # keras \
-                plotly \
+                # plotly \
                 # pytorch
                 # torch \
                 # torchvision \
                 # torchaudio \
+                notebook \
                 jupyterlab>=3.4 \
                 libiconv \
                 ipywidgets>=8.0 \
                 ipyleaflet \
                 # for dash
-                dash \
+                # dash 
                 lxml \
                 xlrd \
                 xlwt \
     && conda clean -y --all
-# RUN jupyter contrib nbextension install --user
-RUN pip install jupyter_dash # tflearn
+
+RUN jupyter contrib nbextension install --user
+# RUN pip install jupyter_dash tflearn
 
 RUN mkdir -p $NOTEBOOK_DIR \
     && mkdir -p $JUPYTER_DIR \
@@ -100,15 +97,16 @@ RUN yarn global add typescript tslab \
     && yarn add @types/node
 
 # Install jupyter labextensions
-RUN jupyter labextension install \
-            @jupyter-widgets/jupyterlab-manager \
-            jupyterlab-plotly \
-            plotlywidget \
-            jupyter-leaflet
+# RUN jupyter labextension install \
+            # @jupyter-widgets/jupyterlab-manager \
+            # jupyterlab-plotly \
+            # plotlywidget \
+            # jupyter-leaflet
 
 # for JupyterLab
 EXPOSE 8888
 # for Dash
-EXPOSE 8050
+# EXPOSE 8050
 
-CMD ["jupyter", "lab", "--no-browser", "--ip=0.0.0.0", "--allow-root", "--allow_remote_access=true", "--notebook-dir=/jupyter/notebooks", "--config=$JUPYTER_DIR/jupyter_notebook_config.py"]
+# vs code jupyter extension xsrf error: add "--ServerApp.disable_check_xsrf=True". ref: https://stackoverflow.com/a/71533909
+CMD ["jupyter", "lab", "--no-browser", "--ip=0.0.0.0", "--allow-root", "--ServerApp.disable_check_xsrf=True", "--notebook-dir=/jupyter/notebooks", "--config=$JUPYTER_DIR/jupyter_notebook_config.py"]
