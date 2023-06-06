@@ -64,6 +64,9 @@ RUN mamba install -y -c conda-forge  \
                 ipyleaflet \
                 # for dash
                 plotly \
+                torch \
+                torchvision \
+                torchaudio \
                 dash \
                 lxml \
                 xlrd \

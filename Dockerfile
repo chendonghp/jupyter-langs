@@ -12,9 +12,9 @@ FROM golang:${GOLANG_VERSION}-bullseye as golang
 FROM julia:${JULIA_VERSION}-bullseye as julia
 # https://hub.docker.com/_/erlang
 # https://hub.docker.com/_/elixir
-FROM elixir:${ELIXIR_VERSION}-slim as elixir
+# FROM elixir:${ELIXIR_VERSION}-slim as elixir
 # https://hub.docker.com/_/microsoft-dotnet-sdk
-FROM mcr.microsoft.com/dotnet/sdk:${DOTNET_SDK_VERSION}-bullseye-slim as dotnet-sdk
+# FROM mcr.microsoft.com/dotnet/sdk:${DOTNET_SDK_VERSION}-bullseye-slim as dotnet-sdk
 # https://hub.docker.com/_/openjdk
 FROM openjdk:${JAVA_VERSION}-jdk-bullseye as openjdk
 
@@ -24,8 +24,8 @@ LABEL Description="Jupyter lab for various languages"
 LABEL Version="5.17.0"
 
 # Install SPARQL
-RUN pip install sparqlkernel && \
-    jupyter sparqlkernel install
+# RUN pip install sparqlkernel && \
+#     jupyter sparqlkernel install
 
 # Install R
 RUN apt-get update && \
@@ -102,97 +102,97 @@ RUN set -eux; \
 RUN cargo install evcxr_jupyter \
     && evcxr_jupyter --install
 
-# Install Ruby https://www.ruby-lang.org
-ENV RUBY_VERSION=3.1.2
-ENV RUBY_HOME=/opt/ruby
-RUN apt-get update -y \
-    && apt-get install  -y --no-install-recommends \
-		bzip2 \
-		ca-certificates \
-		libffi-dev \
-		libgmp-dev \
-		libssl-dev \
-		libyaml-dev \
-		procps \
-		zlib1g-dev \
-        autoconf \
-		bison \
-		dpkg-dev \
-		gcc \
-		libbz2-dev \
-		libgdbm-compat-dev \
-		libgdbm-dev \
-		libglib2.0-dev \
-		libncurses-dev \
-		libreadline-dev \
-		libxml2-dev \
-		libxslt-dev \
-		make \
-		ruby \
-		wget \
-		xz-utils
-RUN git clone https://github.com/rbenv/ruby-build.git \
-    && PREFIX=/usr/local ./ruby-build/install.sh \
-    && mkdir -p ${RUBY_HOME} \
-    && ruby-build ${RUBY_VERSION} ${RUBY_HOME}/${RUBY_VERSION}
-ENV PATH=${RUBY_HOME}/${RUBY_VERSION}/bin:$PATH
-RUN gem install --no-document \
-                benchmark_driver \
-                cztop \
-                iruby \
-    && iruby register --force
+# # Install Ruby https://www.ruby-lang.org
+# ENV RUBY_VERSION=3.1.2
+# ENV RUBY_HOME=/opt/ruby
+# RUN apt-get update -y \
+#     && apt-get install  -y --no-install-recommends \
+# 		bzip2 \
+# 		ca-certificates \
+# 		libffi-dev \
+# 		libgmp-dev \
+# 		libssl-dev \
+# 		libyaml-dev \
+# 		procps \
+# 		zlib1g-dev \
+#         autoconf \
+# 		bison \
+# 		dpkg-dev \
+# 		gcc \
+# 		libbz2-dev \
+# 		libgdbm-compat-dev \
+# 		libgdbm-dev \
+# 		libglib2.0-dev \
+# 		libncurses-dev \
+# 		libreadline-dev \
+# 		libxml2-dev \
+# 		libxslt-dev \
+# 		make \
+# 		ruby \
+# 		wget \
+# 		xz-utils
+# RUN git clone https://github.com/rbenv/ruby-build.git \
+#     && PREFIX=/usr/local ./ruby-build/install.sh \
+#     && mkdir -p ${RUBY_HOME} \
+#     && ruby-build ${RUBY_VERSION} ${RUBY_HOME}/${RUBY_VERSION}
+# ENV PATH=${RUBY_HOME}/${RUBY_VERSION}/bin:$PATH
+# RUN gem install --no-document \
+#                 benchmark_driver \
+#                 cztop \
+#                 iruby \
+#     && iruby register --force
 
-# Install .NET6
-ENV DOTNET_ROOT=/usr/share/dotnet
-ENV DOTNET_SDK_VERSION=${DOTNET_SDK_VERSION}
-ENV PATH=/usr/share/dotnet:/root/.dotnet/tools:$PATH
-COPY --from=dotnet-sdk ${DOTNET_ROOT} ${DOTNET_ROOT}
-RUN ln -s ${DOTNET_ROOT}/dotnet /usr/bin/dotnet \
-    && dotnet help
-RUN dotnet tool install -g Microsoft.dotnet-interactive \
-    && dotnet interactive jupyter install
+# # Install .NET6
+# ENV DOTNET_ROOT=/usr/share/dotnet
+# ENV DOTNET_SDK_VERSION=${DOTNET_SDK_VERSION}
+# ENV PATH=/usr/share/dotnet:/root/.dotnet/tools:$PATH
+# COPY --from=dotnet-sdk ${DOTNET_ROOT} ${DOTNET_ROOT}
+# RUN ln -s ${DOTNET_ROOT}/dotnet /usr/bin/dotnet \
+#     && dotnet help
+# RUN dotnet tool install -g Microsoft.dotnet-interactive \
+#     && dotnet interactive jupyter install
 
 # Install Erlang and Elixir
-COPY --from=elixir /usr/local/lib/erlang /usr/local/lib/erlang
-COPY --from=elixir /usr/local/lib/elixir /usr/local/lib/elixir
-COPY --from=elixir /usr/local/bin/rebar3 /usr/local/bin/rebar3
+# COPY --from=elixir /usr/local/lib/erlang /usr/local/lib/erlang
+# COPY --from=elixir /usr/local/lib/elixir /usr/local/lib/elixir
+# COPY --from=elixir /usr/local/bin/rebar3 /usr/local/bin/rebar3
 
-RUN runtimeDeps=' \
-		libodbc1 \
-		libssl1.1 \
-		libsctp1 \
-	' \
-	&& apt-get update \
-    && apt-get install -y --no-install-recommends $runtimeDeps
+# RUN runtimeDeps=' \
+# 		libodbc1 \
+# 		libssl1.1 \
+# 		libsctp1 \
+# 	' \
+# 	&& apt-get update \
+#     && apt-get install -y --no-install-recommends $runtimeDeps
 
-RUN ln -s /usr/local/lib/erlang/bin/ct_run /usr/local/bin/ct_run \
-    && ln -s /usr/local/lib/erlang/bin/dialyzer /usr/local/bin/dialyzer \
-    && ln -s /usr/local/lib/erlang/bin/epmd /usr/local/bin/epmd \
-    && ln -s /usr/local/lib/erlang/bin/erl /usr/local/bin/erl \
-    && ln -s /usr/local/lib/erlang/bin/erlc /usr/local/bin/erlc \
-    && ln -s /usr/local/lib/erlang/bin/escript /usr/local/bin/escript \
-    && ln -s /usr/local/lib/erlang/bin/run_erl /usr/local/bin/run_erl \
-    && ln -s /usr/local/lib/erlang/bin/to_erl /usr/local/bin/to_erl \
-    && ln -s /usr/local/lib/erlang/bin/typer /usr/local/bin/typer \
-    && ln -s /usr/local/lib/elixir/bin/elixir /usr/local/bin/elixir \
-    && ln -s /usr/local/lib/elixir/bin/elixirc /usr/local/bin/elixirc \
-    && ln -s /usr/local/lib/elixir/bin/iex /usr/local/bin/iex \
-    && ln -s /usr/local/lib/elixir/bin/mix /usr/local/bin/mix
-RUN mix local.hex --force \
-    && mix local.rebar --force
-RUN git clone https://github.com/filmor/ierl.git ierl \
-    && cd ierl \
-    && mkdir $HOME/.ierl \
-    && mix deps.get \
-    # Build lfe explicitly for now
-    && (cd deps/lfe && ~/.mix/rebar3 compile) \
-    && (cd apps/ierl && env MIX_ENV=prod mix escript.build) \
-    && cp apps/ierl/ierl $HOME/.ierl/ierl.escript \
-    && chmod +x $HOME/.ierl/ierl.escript \
-    && $HOME/.ierl/ierl.escript install erlang --user \
-    && $HOME/.ierl/ierl.escript install elixir --user \
-    && cd .. \
-    && rm -rf ierl
+# RUN ln -s /usr/local/lib/erlang/bin/ct_run /usr/local/bin/ct_run \
+#     && ln -s /usr/local/lib/erlang/bin/dialyzer /usr/local/bin/dialyzer \
+#     && ln -s /usr/local/lib/erlang/bin/epmd /usr/local/bin/epmd \
+#     && ln -s /usr/local/lib/erlang/bin/erl /usr/local/bin/erl \
+#     && ln -s /usr/local/lib/erlang/bin/erlc /usr/local/bin/erlc \
+#     && ln -s /usr/local/lib/erlang/bin/escript /usr/local/bin/escript \
+#     && ln -s /usr/local/lib/erlang/bin/run_erl /usr/local/bin/run_erl \
+#     && ln -s /usr/local/lib/erlang/bin/to_erl /usr/local/bin/to_erl \
+#     && ln -s /usr/local/lib/erlang/bin/typer /usr/local/bin/typer \
+#     && ln -s /usr/local/lib/elixir/bin/elixir /usr/local/bin/elixir \
+#     && ln -s /usr/local/lib/elixir/bin/elixirc /usr/local/bin/elixirc \
+#     && ln -s /usr/local/lib/elixir/bin/iex /usr/local/bin/iex \
+#     && ln -s /usr/local/lib/elixir/bin/mix /usr/local/bin/mix
+# RUN mix local.hex --force \
+#     && mix local.rebar --force
+# RUN git clone https://github.com/filmor/ierl.git ierl \
+#     && cd ierl \
+#     && mkdir $HOME/.ierl \
+#     && mix deps.get \
+#     # Build lfe explicitly for now
+#     && (cd deps/lfe && ~/.mix/rebar3 compile) \
+#     && (cd apps/ierl && env MIX_ENV=prod mix escript.build) \
+#     && cp apps/ierl/ierl $HOME/.ierl/ierl.escript \
+#     && chmod +x $HOME/.ierl/ierl.escript \
+#     && $HOME/.ierl/ierl.escript install erlang --user \
+#     && $HOME/.ierl/ierl.escript install elixir --user \
+#     && cd .. \
+#     && rm -rf ierl
 
 # Install JVM languages
 ## Java
